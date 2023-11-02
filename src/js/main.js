@@ -1,3 +1,5 @@
+import { NPC } from "./modules/npc.js";
+
 window.onload = () => {
 	console.log("Hello WOrld");
 	init();
@@ -14,11 +16,12 @@ var game = {
 	playerShots: [],
 	enemySpawnRate: 100,
 	lastEnemySpawn: 100,
-	maxEnemies: 10,
+	maxEnemies: 5,
 	enemyShots: [],
 	enemies: [],
 	stars: []
 }
+window.game = game;
 
 
 function init() {
@@ -44,6 +47,7 @@ function init() {
 	}
 
 	game.world = new PIXI.Container();
+	game.world.scale = new PIXI.Point(1, 1);
 	app.stage.addChild(game.world);
 
 	game.planetLayer = new PIXI.Container();
@@ -94,10 +98,9 @@ function update(deltaTime) {
 
 	game.player.x += game.player.vX * deltaTime;
 	game.player.y += game.player.vY * deltaTime;
-	loopScreen(game.player);
 
-	game.world.x = -game.player.x + (app.view.width / 2);
-	game.world.y = -game.player.y + (app.view.height / 2);
+	game.world.x = (-game.player.x * game.world.scale.x) + (app.view.width / 2);
+	game.world.y = (-game.player.y * game.world.scale.x) + (app.view.height / 2);
 
 	// handle shooting and shots
 	if (game.player.lastShot > 0) {
@@ -118,18 +121,18 @@ function update(deltaTime) {
 
 		shot.x += shot.vX;
 		shot.y += shot.vY;
-		loopScreen(shot);
 
 		for (let j = 0; j < game.enemies.length; j++) {
 			// eventually, assign all entities unique IDs, and registered to ID of shooter
 			// skip collision check for shots matching shooter ID
 			let enemy = game.enemies[j];
 
-			let collide = boxIntersect(shot.x, shot.y, shot.width, shot.height, enemy.x, enemy.y, enemy.width, enemy.height);
+			let collide = boxIntersect(shot, enemy.ship);
 
 			if (collide) {
 				game.enemies.splice(j, 1);
-				game.world.removeChild(enemy);
+				enemy.destroy();
+				// game.world.removeChild(enemy);
 
 				// destroy shot as well
 				game.playerShots.splice(i, 1);
@@ -154,49 +157,7 @@ function update(deltaTime) {
 
 	for (let i = 0; i < game.enemies.length; i++) {
 		let enemy = game.enemies[i];
-
-		enemy.x += enemy.vX;
-		enemy.y += enemy.vY;
-
-		loopScreen(enemy);
-
-		var distX = game.player.x - enemy.x;
-		var distY = game.player.y - enemy.y;
-		var targetAngle = Math.atan2(distY,distX);
-
-		var behind = enemy.rotation - 3.14;
-		if (behind < -3.14) {
-			behind += 6.28;
-		}
-		if (enemy.rotation < 0) {
-			if (targetAngle > enemy.rotation && targetAngle < behind) {
-				enemy.rotation += r2d(game.turnRate) * deltaTime;
-			} else {
-				enemy.rotation -= r2d(game.turnRate) * deltaTime;
-			}
-		} else {
-			if (targetAngle < enemy.rotation && targetAngle > behind) {
-				enemy.rotation -= r2d(game.turnRate) * deltaTime;
-			} else {
-				enemy.rotation += r2d(game.turnRate) * deltaTime;
-			}
-		}
-
-		if (enemy.rotation < -3.14) {
-			enemy.rotation += 6.28;
-		}
-		if (enemy.rotation > 3.14) {
-			enemy.rotation -= 6.28;
-		}
-
-		updateSpeed(enemy, deltaTime);
-		// console.log("current " + enemy.rotation +" target " + targetAngle);
-
-		// update enemyshots
-		enemy.lastShot -= deltaTime;
-		if (enemy.lastShot < 0) {
-			enemyShoot(enemy);
-		}
+		enemy.update(deltaTime);
 	}
 
 	game.lastEnemySpawn -= deltaTime;
@@ -208,8 +169,8 @@ function update(deltaTime) {
 	// update background starfield
 	for (let i = 0; i < game.stars.length; i++) {
 		var star = game.stars[i];
-		star.x -= game.player.vX * star.parallax;
-		star.y -= game.player.vY * star.parallax;
+		star.x -= (game.player.vX * game.world.scale.x) * star.parallax;
+		star.y -= (game.player.vY * game.world.scale.x) * star.parallax;
 
 		if (star.x < -32) {
 			star.x = app.view.width + 16;
@@ -250,8 +211,6 @@ function playerShoot() {
 }
 
 function enemyShoot(enemy) {
-	enemy.lastShot = game.fireRate;
-
 	let shot = PIXI.Sprite.from('./img/laserRed01.png');
 	shot.x = enemy.x;
 	shot.y = enemy.y;
@@ -268,18 +227,34 @@ function enemyShoot(enemy) {
 
 function spawnEnemy() {
 	game.lastEnemySpawn = game.enemySpawnRate;
-	// set up enemy
-	let enemy = PIXI.Sprite.from('./img/ship2.png');
-	enemy.x = Math.round(Math.random() * app.view.width);
-	enemy.y = Math.round(Math.random() * app.view.height);
-	enemy.rotation = Math.random() * 6.28;
-	enemy.anchor = new PIXI.Point(0.5, 0.5);
-	enemy.lastShot = game.fireRate;
-	game.world.addChild(enemy);
 
-	var enemySpeed = 1 + (Math.random() * 3);
-	enemy.vX = Math.cos(enemy.rotation - 1.57) * enemySpeed;
-	enemy.vY = Math.sin(enemy.rotation - 1.57) * enemySpeed;
+	var enemyShipConfig = {
+		spritePath: './img/ship2.png',
+		accel: .1,
+		turnRate: .001,
+		maxSpeed: 5,
+		fireRate: 15,
+		shotSpeed: 10,
+		shotLifetime: 60,
+		x: Math.round(Math.random() * app.view.width),
+		y: Math.round(Math.random() * app.view.height),
+		vX: 0,
+		vY: 0
+	};
+
+	var enemyConfig = {
+		id: "0000001",
+		name: "Test",
+		shipConfig: enemyShipConfig,
+		faction: "enemy",
+		target: game.player,
+		emotion: "wry",
+		ai: "bad"
+	};
+
+	let enemy = new NPC(enemyConfig, game.world);
+	enemy.accelerating = true;
+	enemy.shooting = true;
 
 	game.enemies.push(enemy);
 }
@@ -324,30 +299,14 @@ function r2d(r) {
 	return r * (180/Math.PI);
 }
 
-function boxIntersect(aX, aY, aW, aH, bX, bY, bW, bH) {
+function boxIntersect(a, b) {
 	return (
-		aX < bX + bW &&		// left edge of A is less than right edge of B
-		aX + aW > bX &&		// right edge of A is greater than left edge of B
-		aY < bY + bH &&		// top edge of A is less than bottom edge of B
-		aY + aH > bY 		// bottom edge of A is greater than top edge of B
+		a.x < b.x + b.width &&		// left edge of A is less than right edge of B
+		a.x + a.width > b.x &&		// right edge of A is greater than left edge of B
+		a.y < b.y + b.height &&		// top edge of A is less than bottom edge of B
+		a.y + a.height > b.y 		// bottom edge of A is greater than top edge of B
 	);
 };
-
-function loopScreen(sprite) {
-	return;
-
-	if (sprite.x < 0) {
-		sprite.x = app.view.width;
-	} else if (sprite.x > app.view.width) {
-		sprite.x  = 0;
-	}
-
-	if (sprite.y < 0) {
-		sprite.y = app.view.height;
-	} else if (sprite.y > app.view.height) {
-		sprite.y  = 0;
-	}
-}
 
 function updateSpeed(entity, deltaTime) {
 	entity.vX += Math.cos(entity.rotation) * game.accel * deltaTime;
