@@ -89,7 +89,7 @@ class Ship {
 	}
 
 	shoot() {
-		
+		PubSub.publish('SHOTS_FIRED', 'Shots fired captain!');
 	}
 
 	update(deltaTime) {

@@ -85,6 +85,8 @@ function init() {
 	let player = new Player(playerConfig, game.world);
 	game.player = player;
 
+	var shotToken = PubSub.subscribe('SHOTS_FIRED', shotSubscriber);
+
 	// set up ticker
 	app.ticker.add(update);
 }
@@ -185,6 +187,10 @@ function update(deltaTime) {
 		}
 	}
 }
+
+function shotSubscriber (msg, data) {
+	console.log(msg, data);
+};
 
 function playerShoot() {
 	game.player.lastShot = game.fireRate;
