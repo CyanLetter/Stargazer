@@ -1,4 +1,6 @@
+import { Player } from "./modules/player.js";
 import { NPC } from "./modules/npc.js";
+import { Physics } from "./modules/physics.js";
 
 window.onload = () => {
 	console.log("Hello WOrld");
@@ -60,47 +62,38 @@ function init() {
 	planet.anchor = new PIXI.Point(0.5, 0.5);
 	game.planetLayer.addChild(planet);
 
-	// set up player
-	let player = PIXI.Sprite.from('./img/ship3.png');
-	// player.x = app.view.width / 2;
-	// player.y = app.view.height / 2;
-	player.anchor = new PIXI.Point(0.5, 0.5);
-	game.world.addChild(player);
+	let playerShipConfig = {
+		spritePath: './img/ship3.png',
+		accel: .1,
+		turnRate: .001,
+		maxSpeed: 6,
+		fireRate: 15,
+		shotSpeed: 10,
+		shotLifetime: 60,
+		x: 0,
+		y: 0,
+		vX: 0,
+		vY: 0
+	};
+	let playerConfig = {
+		id: "Player",
+		name: "Billy Idol",
+		gender: "ambiguous",
+		shipConfig: playerShipConfig,
+		target: null
+	};
+	let player = new Player(playerConfig, game.world);
 	game.player = player;
-
-	game.player.vX = 0;
-	game.player.vY = 0;
-	game.player.turningL = false;
-	game.player.turningR = false;
-	game.player.accelerating = false;
-	game.player.shooting = false;
-	game.player.lastShot = 0;
 
 	// set up ticker
 	app.ticker.add(update);
-
-	// controller events
-	window.addEventListener("keydown", (event) => handleKeyDown(event));
-	window.addEventListener("keyup", (event) => handleKeyUp(event));
 }
 
 function update(deltaTime) {
-	if (game.player.turningL) {
-		game.player.rotation -= r2d(game.turnRate) * deltaTime;
-	}
-	if (game.player.turningR) {
-		game.player.rotation += r2d(game.turnRate) * deltaTime;
-	}
-	if (game.player.accelerating) {
-		// add velocity in direction
-		updateSpeed(game.player, deltaTime);
-	}
+	game.player.update(deltaTime);
 
-	game.player.x += game.player.vX * deltaTime;
-	game.player.y += game.player.vY * deltaTime;
-
-	game.world.x = (-game.player.x * game.world.scale.x) + (app.view.width / 2);
-	game.world.y = (-game.player.y * game.world.scale.x) + (app.view.height / 2);
+	game.world.x = (-game.player.ship.x * game.world.scale.x) + (app.view.width / 2);
+	game.world.y = (-game.player.ship.y * game.world.scale.x) + (app.view.height / 2);
 
 	// handle shooting and shots
 	if (game.player.lastShot > 0) {
@@ -127,7 +120,7 @@ function update(deltaTime) {
 			// skip collision check for shots matching shooter ID
 			let enemy = game.enemies[j];
 
-			let collide = boxIntersect(shot, enemy.ship);
+			let collide = Physics.boxIntersect(shot, enemy.ship);
 
 			if (collide) {
 				game.enemies.splice(j, 1);
@@ -169,8 +162,8 @@ function update(deltaTime) {
 	// update background starfield
 	for (let i = 0; i < game.stars.length; i++) {
 		var star = game.stars[i];
-		star.x -= (game.player.vX * game.world.scale.x) * star.parallax;
-		star.y -= (game.player.vY * game.world.scale.x) * star.parallax;
+		star.x -= (game.player.ship.vX * game.world.scale.x) * star.parallax;
+		star.y -= (game.player.ship.vY * game.world.scale.x) * star.parallax;
 
 		if (star.x < -32) {
 			star.x = app.view.width + 16;
@@ -228,7 +221,7 @@ function enemyShoot(enemy) {
 function spawnEnemy() {
 	game.lastEnemySpawn = game.enemySpawnRate;
 
-	var enemyShipConfig = {
+	let enemyShipConfig = {
 		spritePath: './img/ship2.png',
 		accel: .1,
 		turnRate: .001,
@@ -242,12 +235,12 @@ function spawnEnemy() {
 		vY: 0
 	};
 
-	var enemyConfig = {
+	let enemyConfig = {
 		id: "0000001",
 		name: "Test",
 		shipConfig: enemyShipConfig,
 		faction: "enemy",
-		target: game.player,
+		target: game.player.ship,
 		emotion: "wry",
 		ai: "bad"
 	};
@@ -257,42 +250,6 @@ function spawnEnemy() {
 	enemy.shooting = true;
 
 	game.enemies.push(enemy);
-}
-
-function handleKeyDown(event) {
-	// console.log(event);
-
-	if (event.code === "KeyW") {
-		accel(true);
-	} else if (event.code === "KeyA") {
-		turn(true, "L");
-	} else if (event.code === "KeyD") {
-		turn(true, "R");
-	} else if (event.code === "Space") {
-		game.player.shooting = true;
-	}
-}
-
-function handleKeyUp(event) {
-	// console.log(event);
-
-	if (event.code === "KeyW") {
-		accel(false);
-	} else if (event.code === "KeyA") {
-		turn(false, "L");
-	} else if (event.code === "KeyD") {
-		turn(false, "R");
-	} else if (event.code === "Space") {
-		game.player.shooting = false;
-	}
-}
-
-function turn(isTurning, direction) {
-	game.player["turning" + direction] = isTurning;
-}
-
-function accel(isAccelerating) {
-	game.player.accelerating = isAccelerating;
 }
 
 function r2d(r) {
