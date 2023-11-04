@@ -15,11 +15,10 @@ var game = {
 	shotSpeed: 10,
 	shotLifetime: 60,
 	player: null,
-	playerShots: [],
+	shots: [],
 	enemySpawnRate: 100,
 	lastEnemySpawn: 100,
 	maxEnemies: 5,
-	enemyShots: [],
 	enemies: [],
 	stars: []
 }
@@ -62,14 +61,19 @@ function init() {
 	planet.anchor = new PIXI.Point(0.5, 0.5);
 	game.planetLayer.addChild(planet);
 
+	let playerWeaponConfig = {
+		spritePath: './img/laserBlue01.png',
+		fireRate: 15,
+		shotSpeed: 10,
+		shotLifetime: 60,
+	}
+
 	let playerShipConfig = {
 		spritePath: './img/ship3.png',
 		accel: .1,
 		turnRate: .001,
 		maxSpeed: 6,
-		fireRate: 15,
-		shotSpeed: 10,
-		shotLifetime: 60,
+		weapons: [playerWeaponConfig],
 		x: 0,
 		y: 0,
 		vX: 0,
@@ -96,20 +100,13 @@ function update(deltaTime) {
 
 	game.world.x = (-game.player.ship.x * game.world.scale.x) + (app.view.width / 2);
 	game.world.y = (-game.player.ship.y * game.world.scale.x) + (app.view.height / 2);
-
-	// handle shooting and shots
-	if (game.player.lastShot > 0) {
-		game.player.lastShot -= deltaTime;
-	}
-	if (game.player.shooting && game.player.lastShot <= 0) {
-		playerShoot();
-	}
 	
-	for (let i = game.playerShots.length - 1; i >= 0; i--) {
-		let shot = game.playerShots[i];
+	// handle shots
+	for (let i = game.shots.length - 1; i >= 0; i--) {
+		let shot = game.shots[i];
 		shot.time += deltaTime;
-		if (shot.time >= game.shotLifetime) {
-			game.playerShots.splice(i, 1);
+		if (shot.time >= shot.lifetime) {
+			game.shots.splice(i, 1);
 			game.shotLayer.removeChild(shot);
 			continue;
 		}
@@ -117,37 +114,11 @@ function update(deltaTime) {
 		shot.x += shot.vX;
 		shot.y += shot.vY;
 
-		for (let j = 0; j < game.enemies.length; j++) {
-			// eventually, assign all entities unique IDs, and registered to ID of shooter
-			// skip collision check for shots matching shooter ID
-			let enemy = game.enemies[j];
-
-			let collide = Physics.boxIntersect(shot, enemy.ship);
-
-			if (collide) {
-				game.enemies.splice(j, 1);
-				enemy.destroy();
-				// game.world.removeChild(enemy);
-
-				// destroy shot as well
-				game.playerShots.splice(i, 1);
-				game.shotLayer.removeChild(shot);
-				continue;
-			}
-		}
-	}
-
-	for (let i = game.enemyShots.length - 1; i >= 0; i--) {
-		let shot = game.enemyShots[i];
-		shot.time += deltaTime;
-		if (shot.time >= game.shotLifetime) {
-			game.enemyShots.splice(i, 1);
+		let shotHit = checkShotCollision(shot);
+		if (shotHit) {
+			game.shots.splice(i, 1);
 			game.shotLayer.removeChild(shot);
-			continue;
 		}
-
-		shot.x += shot.vX;
-		shot.y += shot.vY;
 	}
 
 	for (let i = 0; i < game.enemies.length; i++) {
@@ -160,7 +131,36 @@ function update(deltaTime) {
 		spawnEnemy();
 	}
 
+	updateStarfield();
+}
 
+function checkShotCollision(shot) {
+	if (shot.ownerId != game.player.config.id) {
+		let collide = Physics.boxIntersect(shot, game.player.ship);
+		if (collide) {
+			console.log("Shot", shot.ownerId, "Hit Player");
+			return true;
+		}
+	}
+
+	for (let j = 0; j < game.enemies.length; j++) {
+		let enemy = game.enemies[j];
+
+		if (enemy.config.id == shot.ownerId) {
+			continue;
+		}
+		let collide = Physics.boxIntersect(shot, enemy.ship);
+
+		if (collide) {
+			console.log("Shot", shot.ownerId, "Hit Entity", enemy.config.id);
+			game.enemies.splice(j, 1);
+			enemy.destroy();
+			return true;
+		}
+	}
+}
+
+function updateStarfield() {
 	// update background starfield
 	for (let i = 0; i < game.stars.length; i++) {
 		var star = game.stars[i];
@@ -189,60 +189,37 @@ function update(deltaTime) {
 }
 
 function shotSubscriber (msg, data) {
-	console.log(msg, data);
+	// console.log(msg, data);
+	if (msg == "SHOTS_FIRED") {
+		game.shots.push(data);
+		game.shotLayer.addChild(data);
+	}
 };
-
-function playerShoot() {
-	game.player.lastShot = game.fireRate;
-
-	let shot = PIXI.Sprite.from('./img/laserBlue01.png');
-	shot.x = game.player.x;
-	shot.y = game.player.y;
-	shot.rotation = game.player.rotation;
-	shot.anchor = new PIXI.Point(0.5, 0.5);
-	shot.scale = new PIXI.Point(0.5, 0.5);
-	shot.vX = (Math.cos(shot.rotation) * game.shotSpeed) + game.player.vX;
-	shot.vY = (Math.sin(shot.rotation) * game.shotSpeed) + game.player.vY;
-	shot.time = 0;
-
-	game.playerShots.push(shot);
-	game.shotLayer.addChild(shot);
-}
-
-function enemyShoot(enemy) {
-	let shot = PIXI.Sprite.from('./img/laserRed01.png');
-	shot.x = enemy.x;
-	shot.y = enemy.y;
-	shot.rotation = enemy.rotation;
-	shot.anchor = new PIXI.Point(0.5, 0.5);
-	shot.scale = new PIXI.Point(0.5, 0.5);
-	shot.vX = (Math.cos(shot.rotation) * game.shotSpeed) + enemy.vX;
-	shot.vY = (Math.sin(shot.rotation) * game.shotSpeed) + enemy.vY;
-	shot.time = 0;
-
-	game.enemyShots.push(shot);
-	game.shotLayer.addChild(shot);
-}
 
 function spawnEnemy() {
 	game.lastEnemySpawn = game.enemySpawnRate;
 
+	let enemyWeaponConfig = {
+		spritePath: './img/laserRed01.png',
+		fireRate: 30,
+		shotSpeed: 10,
+		shotLifetime: 40,
+	}
 	let enemyShipConfig = {
 		spritePath: './img/ship2.png',
 		accel: .1,
 		turnRate: .001,
 		maxSpeed: 5,
-		fireRate: 15,
-		shotSpeed: 10,
-		shotLifetime: 60,
+		weapons: [enemyWeaponConfig],
 		x: Math.round(Math.random() * app.view.width),
 		y: Math.round(Math.random() * app.view.height),
 		vX: 0,
 		vY: 0
 	};
 
+	let newEnemyId = Math.round(Math.random() * 100000000);
 	let enemyConfig = {
-		id: "0000001",
+		id: newEnemyId,
 		name: "Test",
 		shipConfig: enemyShipConfig,
 		faction: "enemy",

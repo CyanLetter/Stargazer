@@ -10,7 +10,7 @@ class Player {
 	constructor(config, world) {
 		this.config = config;
 		this.world = world;
-		this.ship = new Ship(this.config.shipConfig);
+		this.ship = new Ship(this.config.shipConfig, this.config.id);
 		this.world.addChild(this.ship.container);
 
 		this.accelerating = false;

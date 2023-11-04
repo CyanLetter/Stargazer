@@ -8,7 +8,7 @@ class NPC {
 	constructor(config, world) {
 		this.config = config;
 		this.world = world;
-		this.ship = new Ship(this.config.shipConfig);
+		this.ship = new Ship(this.config.shipConfig, this.config.id);
 		this.world.addChild(this.ship.container);
 
 		this.target = this.config.target;
@@ -42,6 +42,9 @@ class NPC {
 		}
 		if (this.target) {
 			this.ship.rotateTowardsTarget(deltaTime, this.target);
+		}
+		if (this.shooting) {
+			this.ship.shoot();
 		}
 
 		this.ship.update(deltaTime);

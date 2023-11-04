@@ -1,10 +1,12 @@
 import { Physics } from "./physics.js";
+import { Weapon } from "./weapon.js";
 
 export { Ship };
 
 class Ship {
-	constructor(config) {
+	constructor(config, ownerId) {
 		this.config = config;
+		this.ownerId = ownerId;
 		this.weapons = [];
 		this.vX = 0;
 		this.vY = 0;
@@ -12,13 +14,12 @@ class Ship {
 		/*
 		// Ship config example
 		{
+			ownerId: ,
 			spritePath: ,
 			accel: ,
 			maxSpeed: ,
 			turnRate: ,
-			fireRate: ,
-			shotSpeed: ,
-			shotLifetime: ,
+			weapons: []
 		}
 		*/
 
@@ -30,6 +31,11 @@ class Ship {
 
 		this.container.x = config.x;
 		this.container.y = config.y;
+
+		for (let i = 0; i < this.config.weapons.length; i++) {
+			let weapon = new Weapon(this.config.weapons[i], this);
+			this.weapons.push(weapon);
+		}
 
 		return this;
 	}
@@ -89,11 +95,17 @@ class Ship {
 	}
 
 	shoot() {
-		PubSub.publish('SHOTS_FIRED', 'Shots fired captain!');
+		for (let i = 0; i < this.weapons.length; i++) {
+			this.weapons[i].fire();
+		}
 	}
 
 	update(deltaTime) {
 		this.x += this.vX;
-		this.y += this.vY;	
+		this.y += this.vY;
+
+		for (let i = 0; i < this.weapons.length; i++) {
+			this.weapons[i].update(deltaTime);
+		}
 	}
 }
