@@ -203,7 +203,7 @@ function spawnEnemy() {
 		spritePath: './img/laserRed01.png',
 		fireRate: 30,
 		shotSpeed: 10,
-		shotLifetime: 40,
+		shotLifetime: 180,
 	}
 	let enemyShipConfig = {
 		spritePath: './img/ship2.png',

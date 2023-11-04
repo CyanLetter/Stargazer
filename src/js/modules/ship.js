@@ -32,9 +32,14 @@ class Ship {
 		this.container.x = config.x;
 		this.container.y = config.y;
 
+		this.longestReachWeapon = null;
 		for (let i = 0; i < this.config.weapons.length; i++) {
 			let weapon = new Weapon(this.config.weapons[i], this);
 			this.weapons.push(weapon);
+
+			if (i == 0 || weapon.maxRange > this.longestReachWeapon.maxRange) {
+				this.longestReachWeapon = weapon;
+			}
 		}
 
 		return this;
@@ -46,6 +51,7 @@ class Ship {
 	set x(val) 			{ this.container.x = val; }
 	get y() 			{ return this.container.y; }
 	set y(val) 			{ this.container.y = val; }
+	get position() 		{ return this.container.position; }
 	get width() 		{ return this.container.width; }
 	get height() 		{ return this.container.height; }
 

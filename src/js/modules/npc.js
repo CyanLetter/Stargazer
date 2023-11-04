@@ -41,13 +41,72 @@ class NPC {
 			this.ship.accelerate(deltaTime);
 		}
 		if (this.target) {
-			this.ship.rotateTowardsTarget(deltaTime, this.target);
+			// TODO non combat AI target behavior
+			var aimTarget = this.target.position;
+			if (this.target.vX) {
+				// try to lead shot
+				
+				let projectileSpeed = this.ship.longestReachWeapon.config.shotSpeed;
+				let thisV = new PIXI.Point(this.ship.vX, this.ship.vY);
+				let targetV = new PIXI.Point(this.target.vX, this.target.vY);
+
+				let interceptPoint = this.calculateInterceptPoint(this.ship.position, thisV, this.target.position, targetV, projectileSpeed);
+
+				if (interceptPoint) {
+					aimTarget = interceptPoint;
+				}
+
+			}
+			this.ship.rotateTowardsTarget(deltaTime, aimTarget);
 		}
 		if (this.shooting) {
 			this.ship.shoot();
 		}
 
 		this.ship.update(deltaTime);
+	}
+
+	calculateInterceptPoint(aPos, aVel, bPos, bVel, projectileSpeed) {
+		// Calculate the relative velocity
+		let relVel = { x: bVel.x - aVel.x, y: bVel.y - aVel.y };
+
+		// Calculate the relative position
+		let relPos = { x: bPos.x - aPos.x, y: bPos.y - aPos.y };
+
+		// Quadratic equation coefficients a*t^2 + b*t + c = 0
+		let a = relVel.x**2 + relVel.y**2 - projectileSpeed**2;
+		let b = 2 * (relPos.x * relVel.x + relPos.y * relVel.y);
+		let c = relPos.x**2 + relPos.y**2;
+
+		// Quadratic formula discriminant
+		let discriminant = b**2 - 4 * a * c;
+		if (discriminant < 0) {
+			// No real root means no possible intercept
+			return null;
+		}
+
+		// Time at which the intercept occurs
+		let t = 2 * c / (Math.sqrt(discriminant) - b);
+
+		if (t < 0) {
+			// Negative time means the intercept is not possible in the future
+			return null;
+		}
+
+		// Calculate the intercept position
+		let interceptPos = {
+			x: bPos.x + relVel.x * t,
+			y: bPos.y + relVel.y * t
+		};
+
+		return interceptPos;
+	}
+
+	distance(a, b) {
+		var w = a.x - b.x;
+		var h = a.y - b.y;
+
+		return Math.sqrt( w*w + h*h );
 	}
 
 	destroy() {
