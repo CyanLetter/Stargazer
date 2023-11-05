@@ -61,19 +61,32 @@ function init() {
 	planet.anchor = new PIXI.Point(0.5, 0.5);
 	game.planetLayer.addChild(planet);
 
+	// fast laser
 	let playerWeaponConfig = {
 		spritePath: './img/laserBlue01.png',
-		fireRate: 15,
+		fireRate: 5,
 		shotSpeed: 10,
 		shotLifetime: 60,
+		damageShield: 5,
+		damageHull: 1
+	}
+	let playerWeaponConfig2 = {
+		spritePath: './img/laserGreen10.png',
+		fireRate: 60,
+		shotSpeed: 1,
+		shotLifetime: 180,
+		damageShield: 150,
+		damageHull: 150
 	}
 
 	let playerShipConfig = {
 		spritePath: './img/ship3.png',
+		shield: 50,
+		hull: 50,
 		accel: .1,
-		turnRate: .001,
-		maxSpeed: 6,
-		weapons: [playerWeaponConfig],
+		turnRate: .0013,
+		maxSpeed: 9,
+		weapons: [playerWeaponConfig2],
 		x: 0,
 		y: 0,
 		vX: 0,
@@ -81,8 +94,8 @@ function init() {
 	};
 	let playerConfig = {
 		id: "Player",
-		name: "Billy Idol",
-		gender: "ambiguous",
+		name: "Skum the Trustworthy",
+		gender: "Charlatan",
 		shipConfig: playerShipConfig,
 		target: null
 	};
@@ -139,6 +152,8 @@ function checkShotCollision(shot) {
 		let collide = Physics.boxIntersect(shot, game.player.ship);
 		if (collide) {
 			console.log("Shot", shot.ownerId, "Hit Player");
+
+			game.player.ship.damage(shot.damageShield, shot.damageHull);
 			return true;
 		}
 	}
@@ -153,8 +168,13 @@ function checkShotCollision(shot) {
 
 		if (collide) {
 			console.log("Shot", shot.ownerId, "Hit Entity", enemy.config.id);
-			game.enemies.splice(j, 1);
-			enemy.destroy();
+			let destroyed = enemy.ship.damage(shot.damageShield, shot.damageHull);
+
+			if (destroyed) {
+				game.enemies.splice(j, 1);
+				enemy.destroy();
+			}
+			
 			return true;
 		}
 	}
@@ -204,9 +224,13 @@ function spawnEnemy() {
 		fireRate: 30,
 		shotSpeed: 10,
 		shotLifetime: 180,
+		damageShield: 1,
+		damageHull: 1
 	}
 	let enemyShipConfig = {
 		spritePath: './img/ship2.png',
+		shield: 25,
+		hull: 25,
 		accel: .1,
 		turnRate: .001,
 		maxSpeed: 5,

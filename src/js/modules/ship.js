@@ -10,6 +10,8 @@ class Ship {
 		this.weapons = [];
 		this.vX = 0;
 		this.vY = 0;
+		this.shield = this.config.shield;
+		this.hull = this.config.hull;
 
 		/*
 		// Ship config example
@@ -56,13 +58,39 @@ class Ship {
 	get height() 		{ return this.container.height; }
 
 	accelerate(deltaTime) {
-		this.vX += Math.cos(this.rotation) * this.config.accel * deltaTime;
-		this.vY += Math.sin(this.rotation) * this.config.accel * deltaTime;
+		let rCos = Math.cos(this.rotation);
+		let rSin = Math.sin(this.rotation);
 
-		this.vX = Math.max(-this.config.maxSpeed, this.vX);
-		this.vX = Math.min(this.config.maxSpeed, this.vX);
-		this.vY = Math.max(-this.config.maxSpeed, this.vY);
-		this.vY = Math.min(this.config.maxSpeed, this.vY);
+		let maxX = rCos * this.config.maxSpeed;
+		let maxY = rSin * this.config.maxSpeed;
+
+		let dX = (rCos * this.config.accel * deltaTime);
+		let dY = (rSin * this.config.accel * deltaTime);
+
+		if (Math.sign(maxX) == Math.sign(this.vX) && Math.abs(maxX) < Math.abs(this.vX)) {
+			dX *= -1;
+		}
+		this.vX += dX;
+
+		if (Math.sign(maxY) == Math.sign(this.vY) && Math.abs(maxY) < Math.abs(this.vY)) {
+			dY *= -1;
+		}
+		this.vY += dY;
+
+
+		return;
+
+		if (Math.abs(newvX) <= maxX) {
+			this.vX = newvX;
+		}
+		if (Math.abs(newvY) <= maxY) {
+			this.vY = newvY;
+		}
+
+		this.vX = Math.max(-maxX, this.vX);
+		this.vX = Math.min(maxX, this.vX);
+		this.vY = Math.max(-maxY, this.vY);
+		this.vY = Math.min(maxY, this.vY);
 	}
 
 	rotateDirection(deltaTime, direction) {
@@ -113,5 +141,19 @@ class Ship {
 		for (let i = 0; i < this.weapons.length; i++) {
 			this.weapons[i].update(deltaTime);
 		}
+	}
+
+	damage(shieldDamage, hullDamage) {
+		this.shield = Math.max(this.shield - shieldDamage, 0);
+		if (this.shield == 0) {
+			this.hull -= hullDamage;	
+		}
+
+		console.log("Ship", this.ownerId, "Shield", this.shield, "Hull", this.hull);
+
+		if (this.hull <= 0) {
+			return true;
+		}
+		return false;
 	}
 }

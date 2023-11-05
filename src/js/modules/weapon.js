@@ -38,6 +38,8 @@ class Weapon {
 
 		shot.ownerId = this.ownerId;
 		shot.lifetime = this.config.shotLifetime;
+		shot.damageShield = this.config.damageShield;
+		shot.damageHull = this.config.damageHull;
 
 		shot.x = this.parent.x;
 		shot.y = this.parent.y;
