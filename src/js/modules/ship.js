@@ -7,11 +7,12 @@ class Ship {
 	constructor(config, ownerId) {
 		this.config = config;
 		this.ownerId = ownerId;
+
+		Object.assign(this, config);
+
 		this.weapons = [];
 		this.vX = 0;
 		this.vY = 0;
-		this.shield = this.config.shield;
-		this.hull = this.config.hull;
 
 		/*
 		// Ship config example
@@ -31,8 +32,8 @@ class Ship {
 		this.sprite.anchor = new PIXI.Point(0.5, 0.5);
 		this.container.addChild(this.sprite);
 
-		this.container.x = config.x;
-		this.container.y = config.y;
+		// this.container.x = config.x;
+		// this.container.y = config.y;
 
 		this.longestReachWeapon = null;
 		for (let i = 0; i < this.config.weapons.length; i++) {
@@ -91,6 +92,12 @@ class Ship {
 		this.vX = Math.min(maxX, this.vX);
 		this.vY = Math.max(-maxY, this.vY);
 		this.vY = Math.min(maxY, this.vY);
+	}
+
+	decelerate(deltaTime) {
+		// console.log(this.vX);
+		this.vX *= 1 - (0.05 * deltaTime);
+		this.vY *= 1 - (0.05 * deltaTime);
 	}
 
 	rotateDirection(deltaTime, direction) {

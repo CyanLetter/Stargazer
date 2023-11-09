@@ -7,11 +7,9 @@ class Player {
 	// TBD whether also handles quests or property etc? May just be the current input handling for the player ship
 	// may also handle escorts?
 	// Ships themselves are in control of the physical act of moving through and interacting with space
-	constructor(config, world) {
+	constructor(config) {
 		this.config = config;
-		this.world = world;
 		this.ship = new Ship(this.config.shipConfig, this.config.id);
-		this.world.addChild(this.ship.container);
 
 		this.accelerating = false;
 		this.turningL = false;
@@ -33,9 +31,16 @@ class Player {
 		window.addEventListener("keyup", (event) => this.handleKeyUp(event));
 	}
 
+	addToWorld(world) {
+		world.addChild(this.ship.container);
+	}
+
 	update(deltaTime) {
 		if (this.accelerating) {
 			this.ship.accelerate(deltaTime);
+		}
+		if (this.decelerating) {
+			this.ship.decelerate(deltaTime);
 		}
 		if (this.turningL) {
 			this.ship.rotateDirection(deltaTime, -1)
@@ -63,6 +68,8 @@ class Player {
 			this.turn(true, "L");
 		} else if (event.code === "KeyD") {
 			this.turn(true, "R");
+		} else if (event.code === "KeyS") {
+			this.decel(true);
 		} else if (event.code === "Space") {
 			this.shooting = true;
 		}
@@ -77,6 +84,8 @@ class Player {
 			this.turn(false, "L");
 		} else if (event.code === "KeyD") {
 			this.turn(false, "R");
+		} else if (event.code === "KeyS") {
+			this.decel(false);
 		} else if (event.code === "Space") {
 			this.shooting = false;
 		}
@@ -90,8 +99,17 @@ class Player {
 		this.accelerating = isAccelerating;
 	}
 
+	decel(isDecelerating) {
+		this.decelerating = isDecelerating;
+	}
+
+	removeFromWorld(world) {
+		world.removeChild(this.ship.container);
+	}
+
 	destroy() {
-		this.world.removeChild(this.ship.container);
+		console.log("DESTROYED PLAYER");
+		return;
 
 		window.removeEventListener("keydown", (event) => this.handleKeyDown(event));
 		window.removeEventListener("keyup", (event) => this.handleKeyUp(event));

@@ -33,6 +33,7 @@ class Weapon {
 			return;
 		}
 
+		// TODO pull shot into own class, add properties for seeking or splash damage upon impact
 		this.lastShot = this.config.fireRate;
 		let shot = PIXI.Sprite.from(this.config.spritePath);
 

@@ -5,11 +5,9 @@ export { NPC };
 class NPC {
 	// NPCs control the behavior and allegiance of specific ships
 	// Ships themselves are in control of the physical act of moving through and interacting with space
-	constructor(config, world) {
+	constructor(config) {
 		this.config = config;
-		this.world = world;
 		this.ship = new Ship(this.config.shipConfig, this.config.id);
-		this.world.addChild(this.ship.container);
 
 		this.target = this.config.target;
 
@@ -34,6 +32,10 @@ class NPC {
 			ai: 
 		}
 		*/
+	}
+
+	addToWorld(world) {
+		world.addChild(this.ship.container);
 	}
 
 	update(deltaTime) {
@@ -109,7 +111,11 @@ class NPC {
 		return Math.sqrt( w*w + h*h );
 	}
 
+	removeFromWorld(world) {
+		world.removeChild(this.ship.container);
+	}
+
 	destroy() {
-		this.world.removeChild(this.ship.container);
+		
 	}
 }
