@@ -1,5 +1,6 @@
 import { NPC } from "./npc.js";
 import { Physics } from "./physics.js";
+import { Minimap } from "./minimap.js";
 
 export { PlanetarySystem };
 
@@ -20,17 +21,17 @@ class PlanetarySystem {
 		this.stars = [];
 
 		this.background = new PIXI.Container();
-		app.stage.addChild(this.background);
 
 		this.world = new PIXI.Container();
 		this.world.scale = new PIXI.Point(1, 1);
-		app.stage.addChild(this.world);
 
 		this.planetLayer = new PIXI.Container();
-		this.world.addChild(this.planetLayer);
 
 		this.shotLayer = new PIXI.Container();
-		this.world.addChild(this.shotLayer);
+
+		this.ui = new PIXI.Container();
+		
+
 
 		/*
 		{
@@ -49,12 +50,17 @@ class PlanetarySystem {
 		// populate with random initial ships or derelicts
 		// check for special mission requirements and spawn if needed
 
+		this.minimap = new Minimap(this.world);
+		this.ui.addChild(this.minimap.container);
+
 		this.init();
 	}
 
 	init() {
 		app.stage.addChild(this.background);
 		app.stage.addChild(this.world);
+		app.stage.addChild(this.ui);
+
 		this.world.addChild(this.planetLayer);
 		this.world.addChild(this.shotLayer);
 
@@ -67,7 +73,8 @@ class PlanetarySystem {
 		this.setupPlanets();
 
 		this.addEntity(game.player);
-		this.spawnInitialNpcs();
+		// TEMP DISABLE NPC SPAWN
+		// this.spawnInitialNpcs();
 	}
 
 	update(deltaTime) {
@@ -83,6 +90,7 @@ class PlanetarySystem {
 		this.world.x = (-game.player.ship.x * this.world.scale.x) + (app.view.width / 2);
 		this.world.y = (-game.player.ship.y * this.world.scale.x) + (app.view.height / 2);
 
+		this.minimap.update(deltaTime);
 		// handle starfield, config may change between systems
 		this.updateStarfield();
 	}
@@ -95,6 +103,8 @@ class PlanetarySystem {
 			planet.x = config.x;
 			planet.y = config.y;
 			this.planetLayer.addChild(planet);
+
+			this.minimap.addPlanet(planet);
 		}
 	}
 
@@ -155,6 +165,8 @@ class PlanetarySystem {
 	addEntity(entity) {
 		this.entities.push(entity);
 		entity.addToWorld(this.world);
+
+		this.minimap.addEntity(entity);
 	}
 
 	shotSubscriber (msg, data) {
