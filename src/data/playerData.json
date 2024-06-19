@@ -1,0 +1,28 @@
+{
+	"player": {
+		"id": "Player",
+		"name": "Blackjack",
+		"gender": "Charlatan",
+		"shipConfig": {
+			"spritePath": "./img/ship3.png",
+			"shield": 50,
+			"hull": 50,
+			"accel": 0.1,
+			"turnRate": 0.0013,
+			"maxSpeed": 9,
+			"weapons": [
+				{
+					"spritePath": "./img/laserBlue01.png",
+					"fireRate": 5,
+					"shotSpeed": 10,
+					"shotLifetime": 60,
+					"damageShield": 10,
+					"damageHull": 10
+				}
+			],
+			"vX": 0,
+			"vY": 0
+		},
+		"currentSystem": "test"
+	}
+}

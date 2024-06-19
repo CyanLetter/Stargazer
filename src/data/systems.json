@@ -1,0 +1,73 @@
+{
+	"test": {
+		"name": "Test System",
+		"planetConfigs": [
+			{
+				"name": "Homeworld",
+				"description": "Humanity's home in the inky black sea",
+				"spritePath": "./img/planet15.png",
+				"x": 0,
+				"y": 0
+			},
+			{
+				"name": "Smores",
+				"description": "A capfire in the night",
+				"spritePath": "./img/planet5.png",
+				"x": -1000,
+				"y": -300
+			},
+			{
+				"name": "Lune",
+				"description": "It's a moon!",
+				"spritePath": "./img/planet6.png",
+				"x": 250,
+				"y": 90
+			}
+		],
+		"faction": "",
+		"shipPool": "",
+		"shipFrequency": 0,
+		"initialShipDensity": [0, 10],
+		"mapPos": {"x": 0, "y": 0},
+		"connections": ["beans"]
+	},
+	"beans": {
+		"name": "Beans",
+		"planetConfigs": [
+			{
+				"name": "Red",
+				"description": "A red planet, home to 100 billion poor people",
+				"spritePath": "./img/planet5.png",
+				"x": 0,
+				"y": 0
+			},
+			{
+				"name": "Rock 1",
+				"description": "Tourist trap",
+				"spritePath": "./img/planet6.png",
+				"x": 200,
+				"y": 0
+			},
+			{
+				"name": "Rock 2",
+				"description": "Pirates live here",
+				"spritePath": "./img/planet6.png",
+				"x": 400,
+				"y": 0
+			},
+			{
+				"name": "Rock 3",
+				"description": "No one lives here",
+				"spritePath": "./img/planet6.png",
+				"x": 600,
+				"y": 0
+			}
+		],
+		"faction": "",
+		"shipPool": "",
+		"shipFrequency": 0,
+		"initialShipDensity": [0, 10],
+		"mapPos": {"x": 100, "y": 40},
+		"connections": ["test"]
+	}
+}

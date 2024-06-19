@@ -57,9 +57,9 @@ class PlanetarySystem {
 	}
 
 	init() {
-		app.stage.addChild(this.background);
-		app.stage.addChild(this.world);
-		app.stage.addChild(this.ui);
+		game.systemContainer.addChild(this.background);
+		game.systemContainer.addChild(this.world);
+		game.systemContainer.addChild(this.ui);
 
 		this.world.addChild(this.planetLayer);
 		this.world.addChild(this.shotLayer);
@@ -271,7 +271,8 @@ class PlanetarySystem {
 
 	destroy() {
 		// save data on new persistent objects
-		app.stage.removeChild(this.background);
-		app.stage.removeChild(this.world);
+		game.systemContainer.removeChild(this.background);
+		game.systemContainer.removeChild(this.world);
+		game.systemContainer.removeChild(this.ui);
 	}
 }
